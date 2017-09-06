@@ -1,0 +1,23 @@
+{
+  "name": "studyview3d",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iLuLi/StudyView3D.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iLuLi/StudyView3D/issues"
+  },
+  "homepage": "https://github.com/iLuLi/StudyView3D#readme",
+  "devDependencies": {
+    "express": "^4.15.4"
+  }
+}

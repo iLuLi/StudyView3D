@@ -1,0 +1,20 @@
+{
+  "name": "studyview3d",
+  "description": "",
+  "main": "index.js",
+  "license": "ISC",
+  "homepage": "https://github.com/iLuLi/StudyView3D",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "lib",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "hammerjs": "hammer#^2.0.8",
+    "requirejs": "^2.3.5",
+    "three.js": "threejs#*"
+  }
+}
