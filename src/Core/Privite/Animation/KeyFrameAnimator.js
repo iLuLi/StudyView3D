@@ -4,8 +4,7 @@ define([
     './AnnotationAnimation',
     './MeshAnimation',
     './PolylineAnimation',
-    './VisibilityAnimation',
-    ''
+    './VisibilityAnimation'
 ], function(AnimationHandler, CameraAnimation, AnnotationAnimation, MeshAnimation, PolylineAnimation, VisibilityAnimation) {
     'use strict';
     /**

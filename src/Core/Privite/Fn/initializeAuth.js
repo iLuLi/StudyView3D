@@ -1,12 +1,10 @@
 define([
-    './getParameterByName',
     '../Global',
     '../../Global',
     './refreshToken',
     './getParameterByName',
     '../../Logger'
 ], function(
-    getParameterByName,
     Privite_Global,
     Global,
     refreshToken,

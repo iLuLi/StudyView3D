@@ -1,7 +1,6 @@
 define([
-    '../Core/Privite/Fn/DecodeEnvMap',
-    'dependency'
-], function(DecodeEnvMap, factory) {
+    '../Core/Privite/Fn/DecodeEnvMap'
+], function(DecodeEnvMap) {
     'use strict';
 
     function getTransferables(map) {

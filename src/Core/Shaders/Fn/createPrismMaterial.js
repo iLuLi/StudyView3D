@@ -1,4 +1,4 @@
-define(['../PrismShader'], function(PrismShader) {;
+define(['../PrismShader'], function(PrismShader) {
     'use strict'
     var createPrismMaterial = function () {
         var prismMat = new THREE.ShaderMaterial({

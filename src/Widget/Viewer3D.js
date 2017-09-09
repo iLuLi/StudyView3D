@@ -1636,7 +1636,7 @@ define([
     Viewer3D.prototype.setNavigationLock = function (value) {
         if (this.navigation.getIsLocked() !== value) {
             this.navigation.setIsLocked(value);
-            this.fireEvent({ type: Navigation_MODE_CHANGED_EVENT, id: this.getActiveNavigationTool() });
+            this.fireEvent({ type: EventType.Navigation_MODE_CHANGED_EVENT, id: this.getActiveNavigationTool() });
         }
     };
 
@@ -1662,7 +1662,7 @@ define([
      */
     Viewer3D.prototype.setNavigationLockSettings = function (settings) {
         this.navigation.setLockSettings(settings);
-        this.fireEvent({ type: Navigation_MODE_CHANGED_EVENT, id: this.getActiveNavigationTool() });
+        this.fireEvent({ type: EventType.Navigation_MODE_CHANGED_EVENT, id: this.getActiveNavigationTool() });
     };
 
     /**
@@ -1702,13 +1702,13 @@ define([
         var isDefault = !toolName || toolName === this.getDefaultNavigationToolName();
 
         if (isDefault && this._pushedTool === null) {
-            this.fireEvent({ type: Navigation_MODE_CHANGED_EVENT, id: this.getDefaultNavigationToolName() });
+            this.fireEvent({ type: EventType.Navigation_MODE_CHANGED_EVENT, id: this.getDefaultNavigationToolName() });
             return true;
         }
 
         if (this.impl.controls.activateTool(toolName)) {
             this._pushedTool = toolName;
-            this.fireEvent({ type: Navigation_MODE_CHANGED_EVENT, id: this._pushedTool });
+            this.fireEvent({ type: EventType.Navigation_MODE_CHANGED_EVENT, id: this._pushedTool });
             return true;
         }
 

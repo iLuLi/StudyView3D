@@ -250,7 +250,7 @@ define([
     
                     viewerApi.fireEvent(
                         {
-                            type: Autodesk.Viewing.TOOL_CHANGE_EVENT,
+                            type: EventType.TOOL_CHANGE_EVENT,
                             toolName: toolName,
                             tool: _toolStack[i],
                             active: false
