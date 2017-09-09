@@ -1,4 +1,4 @@
-define(function() {
+define(function() {;
     'use strict'
     var isBrowser = (typeof navigator !== "undefined");
 
@@ -54,13 +54,7 @@ define(function() {
         return (_ua.indexOf("win32") !== -1 || _ua.indexOf("windows") !== -1);
     }();
 
-    // Get the version of the android device through user agent.
-    // Return the version string of android device, e.g. 4.4, 5.0...
-    var getAndroidVersion = function (ua) {
-        var ua = ua || navigator.userAgent;
-        var match = ua.match(/Android\s([0-9\.]*)/);
-        return match ? match[1] : false;
-    };
+    
 
     return {
         isBrowser: isBrowser,
@@ -72,8 +66,6 @@ define(function() {
         isSafari: isSafari,
         isFirefox: isFirefox,
         isMac: isMac,
-        isWindows: isWindows,
-        
-        getAndroidVersion: getAndroidVersion
+        isWindows: isWindows
     }
 });
