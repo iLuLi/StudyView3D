@@ -1,7 +1,7 @@
 define([
     './DeviceType',
     'Hammer'
-], function(DeviceType, factory) {
+], function(DeviceType, Hammer) {
     'use strict';
     var GestureHandler = function (viewerApi) {
     

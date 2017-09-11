@@ -1,4 +1,4 @@
-define(function() {;
+define(['../Constants/Global'], function(Global) {;
     'use strict'
     /**
      * Returns the full url of a resource with version.  The version will be determined from the LMV_VIEWER_VERSION variable.
@@ -8,8 +8,8 @@ define(function() {;
      * @returns {string} - the full resource path.
      */
     var getResourceUrl = function (resourceRelativePath) {
-        var version = LMV_RESOURCE_VERSION;
-        return LMV_RESOURCE_ROOT + resourceRelativePath + (version ? ('?v=' + version) : '');
+        var version = Global.LMV_RESOURCE_VERSION;
+        return Global.LMV_RESOURCE_ROOT + resourceRelativePath + (version ? ('?v=' + version) : '');
     };
 
     return getResourceUrl;

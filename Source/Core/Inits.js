@@ -3,9 +3,159 @@ define([
     './Constants/Global',
     './Utils/initWorkerScript',
     './Utils/loadDependency',
-    './Constants/Environment'
-], function(Logger, Global, initWorkerScript, loadDependency, EnvironmentConfigurations) {
+    './Utils/getParameterByName',
+    './Utils/getParameterByNameFromPath',
+    './Utils/setLanguage',
+    './Utils/setUserName',
+    './Utils/getScript'
+], function (
+    Logger, 
+    Global, 
+    initWorkerScript, 
+    loadDependency, 
+    getParameterByName, 
+    getParameterByNameFromPath, 
+    setLanguage, 
+    setUserName, 
+    getScript
+) {
     'use strict';
+
+    var LmvEndpoints = {
+        local: {
+            RTC: ['https://rtc-dev.api.autodesk.com:443', 'https://lmv.autodesk.com:443'] //port # is required here.
+        },
+        dev: {
+            RTC: ['https://rtc-dev.api.autodesk.com:443', 'https://lmv.autodesk.com:443']
+        },
+        stg: {
+            RTC: ['https://rtc-stg.api.autodesk.com:443', 'https://lmv.autodesk.com:443']
+        },
+        prod: {
+            RTC: ['https://rtc.api.autodesk.com:443', 'https://lmv.autodesk.com:443']
+        }
+    };
+
+    var ViewingApiUrls = {
+        local: "",
+        dev: "https://viewing-dev.api.autodesk.com",
+        stg: "https://viewing-staging.api.autodesk.com",
+        prod: "https://viewing.api.autodesk.com"
+    };
+
+    var DevApiUrls = {
+        local: "",
+        dev: "https://developer-dev.api.autodesk.com",
+        stg: "https://developer-stg.api.autodesk.com",
+        prod: "https://developer.api.autodesk.com"
+    };
+
+    // The apps on https://developer.autodesk.com had to be created under an ADS account... Ask for brozp
+    var AdpConfigs = {
+        stg: { CLIENT_ID: 'lmv-stag', CLIENT_KEY: 'kjemi1rwAgsqIqyvDUtc9etPD6MsAzbV', ENDPOINT: 'https://ase-stg.autodesk.com' },
+        prod: { CLIENT_ID: 'lmv-prod', CLIENT_KEY: 'iaoUM2CRGydfn703yfPq4MAogZi8I5u4', ENDPOINT: 'https://ase.autodesk.com' }
+    }
+
+    var APIS = {
+        ACM: '/oss-ext/v1/acmsessions',
+        OSS: '/oss/v1',
+        VIEWING: '/viewingservice/v1',
+        VIEWING2: '/derivativeservice/v2'
+    };
+
+    var EnvironmentConfigurations = {
+        Local: {
+            ROOT: '',
+            VIEWING: '',
+            ACM: '',
+            OSS: '',
+            LMV: LmvEndpoints["local"]
+        },
+        Development: {
+            ROOT: ViewingApiUrls["dev"],
+            VIEWING: ViewingApiUrls["dev"] + APIS.VIEWING,
+            ACM: DevApiUrls["dev"] + APIS.ACM,
+            OSS: DevApiUrls["dev"] + APIS.OSS,
+            LMV: LmvEndpoints["dev"]
+        },
+        Staging: {
+            ROOT: ViewingApiUrls["stg"],
+            VIEWING: ViewingApiUrls["stg"] + APIS.VIEWING,
+            ACM: DevApiUrls["stg"] + APIS.ACM,
+            OSS: DevApiUrls["stg"] + APIS.OSS,
+            LMV: LmvEndpoints["stg"]
+        },
+        Production: {
+            ROOT: ViewingApiUrls["prod"],
+            VIEWING: ViewingApiUrls["prod"] + APIS.VIEWING,
+            ACM: DevApiUrls["prod"] + APIS.ACM,
+            OSS: DevApiUrls["prod"] + APIS.OSS,
+            LMV: LmvEndpoints["prod"]
+        },
+        AutodeskDevelopment: {
+            ROOT: DevApiUrls["dev"],
+            VIEWING: DevApiUrls["dev"] + APIS.VIEWING,
+            ACM: DevApiUrls["dev"] + APIS.ACM,
+            OSS: DevApiUrls["dev"] + APIS.OSS,
+            LMV: LmvEndpoints["dev"]
+        },
+        AutodeskStaging: {
+            ROOT: DevApiUrls["stg"],
+            VIEWING: DevApiUrls["stg"] + APIS.VIEWING,
+            ACM: DevApiUrls["stg"] + APIS.ACM,
+            OSS: DevApiUrls["stg"] + APIS.OSS,
+            LMV: LmvEndpoints["stg"]
+        },
+        AutodeskProduction: {
+            ROOT: DevApiUrls["prod"],
+            VIEWING: DevApiUrls["prod"] + APIS.VIEWING,
+            ACM: DevApiUrls["prod"] + APIS.ACM,
+            OSS: DevApiUrls["prod"] + APIS.OSS,
+            LMV: LmvEndpoints["prod"]
+        },
+        DevelopmentV2: {
+            ROOT: ViewingApiUrls["dev"],
+            VIEWING: ViewingApiUrls["dev"] + APIS.VIEWING2,
+            ACM: DevApiUrls["dev"] + APIS.ACM,
+            OSS: DevApiUrls["dev"] + APIS.OSS,
+            LMV: LmvEndpoints["dev"]
+        },
+        StagingV2: {
+            ROOT: ViewingApiUrls["stg"],
+            VIEWING: ViewingApiUrls["stg"] + APIS.VIEWING2,
+            ACM: DevApiUrls["stg"] + APIS.ACM,
+            OSS: DevApiUrls["stg"] + APIS.OSS,
+            LMV: LmvEndpoints["stg"]
+        },
+        ProductionV2: {
+            ROOT: ViewingApiUrls["prod"],
+            VIEWING: ViewingApiUrls["prod"] + APIS.VIEWING2,
+            ACM: DevApiUrls["prod"] + APIS.ACM,
+            OSS: DevApiUrls["prod"] + APIS.OSS,
+            LMV: LmvEndpoints["prod"]
+        },
+        AutodeskDevelopmentV2: {
+            ROOT: DevApiUrls["dev"],
+            VIEWING: DevApiUrls["dev"] + APIS.VIEWING2,
+            ACM: DevApiUrls["dev"] + APIS.ACM,
+            OSS: DevApiUrls["dev"] + APIS.OSS,
+            LMV: LmvEndpoints["dev"]
+        },
+        AutodeskStagingV2: {
+            ROOT: DevApiUrls["stg"],
+            VIEWING: DevApiUrls["stg"] + APIS.VIEWING2,
+            ACM: DevApiUrls["stg"] + APIS.ACM,
+            OSS: DevApiUrls["stg"] + APIS.OSS,
+            LMV: LmvEndpoints["stg"]
+        },
+        AutodeskProductionV2: {
+            ROOT: DevApiUrls["prod"],
+            VIEWING: DevApiUrls["prod"] + APIS.VIEWING2,
+            ACM: DevApiUrls["prod"] + APIS.ACM,
+            OSS: DevApiUrls["prod"] + APIS.OSS,
+            LMV: LmvEndpoints["prod"]
+        }
+    };
     /**
      * This is the Initializer class that initializes the viewer runtime, including:
      *
@@ -54,8 +204,8 @@ define([
      *   };
      *   Autodesk.Viewing.Initializer(options, callback);
      */
-    return function (options, callback) {
-        
+    var Initializer = function (options, callback) {
+
         if (Global.isNodeJS) {
 
             initializeEnvironmentVariable(options);
@@ -167,6 +317,14 @@ define([
             console.log("Environment initialized as : " + env);
         }
         Global.env = env;
+    };
+
+    var initializeUserInfo = function (options) {
+        if (!options || !options.userInfo) return;
+        setUserName(options.userInfo.name);
+        if (options.comment2Token) {
+            Global.comment2Token = options.comment2Token;
+        }
     };
 
     /**
@@ -284,7 +442,7 @@ define([
     };
 
     var initializeAuth = function (onSuccessCallback, options) {
-        
+
         var shouldInitializeAuth = options ? options.shouldInitializeAuth : undefined;
         if (shouldInitializeAuth === undefined) {
             var p = getParameterByName("auth");
@@ -294,8 +452,8 @@ define([
         //Skip Auth in case we are serving the viewer locally
         if (Global.env == "Local" || !shouldInitializeAuth) {
             setTimeout(onSuccessCallback, 0);
-            auth = false;
-            return auth;
+            Global.auth = false;
+            return Global.auth;
         }
 
         //For Node.js, we will use the Authorization header instead of cookie
@@ -303,7 +461,7 @@ define([
             LMV_THIRD_PARTY_COOKIE = false;
 
         // Keep this to make existing client code happy.
-        auth = true;
+        Global.auth = true;
 
         var accessToken;
         if (options && options.getAccessToken) {
@@ -342,14 +500,37 @@ define([
             refreshToken(accessToken, onSuccessCallback);
         }
 
-        return auth;
+        return Global.auth;
+    };
+
+    var initializeLocalization = function (options) {
+        // Initialize language for localization. The corresponding string files
+        // will be downloaded.
+        var language = (options && options.language) || navigator.language;
+
+        // use iso scheme (ab/ab-XY)
+        var tags = language.split('-');
+        language = tags.length > 1 ? tags[0].toLowerCase() + '-' + tags[1].toUpperCase() : tags[0].toLowerCase();
+
+        // check supported language tags and subtags
+        var supportedTags = ["cs", "de", "en", "es", "fr", "it", "ja", "ko", "pl", "pt-BR", "ru", "tr", "zh-HANS", "zh-HANT"];
+        if (supportedTags.indexOf(language) === -1) {
+            if (language.indexOf("zh-CN") > -1) language = "zh-HANS";
+            else if (language.indexOf("zh-TW") > -1) language = "zh-HANT";
+            else if (tags.length > 1 && supportedTags.indexOf(tags[0]) > -1) language = tags[0];
+            else language = "en";
+        }
+
+        // Uncomment below to default to english
+        //language = "en";
+        setLanguage(language);
     };
 
     var initializeProtein = function () {
-        
+
         //For local work, don't redirect texture requests to the CDN,
         //because local ones will load much faster, presumably.
-        if (Global.ENABLE_DEBUG && Global.env == "Local" && !auth /* when auth is true, the viewer is operating under
+        if (Global.ENABLE_DEBUG && Global.env == "Local" && !Global.auth /* when auth is true, the viewer is operating under
         local mode but connect to remote server to get data. */)
             return;
 
@@ -394,31 +575,130 @@ define([
         xhr2.send();
     };
 
+    var initLoadContext = function (inputObj) {
+
+        inputObj = inputObj || {};
+
+        inputObj.auth = Global.auth;
+        inputObj.viewing_url = Global.VIEWING_URL;
+        inputObj.oss_url = Global.OSS_URL;
+
+        if (!inputObj.headers)
+            inputObj.headers = {};
+
+        for (var p in Global.HTTP_REQUEST_HEADERS) {
+            inputObj.headers[p] = Global.HTTP_REQUEST_HEADERS[p];
+        }
+
+        return inputObj;
+    };
+    var refreshCookie = function (token, onSuccess, onError) {
+
+        var xhr = new XMLHttpRequest();
+        xhr.onload = onSuccess;
+        xhr.onerror = onError;
+        xhr.ontimeout = onError;
+
+        // We support two set token end points, the native VS end point and the wrapped apigee end point.
+        if (Global.env.indexOf('Autodesk') === 0) {
+            // This really sucks, as Apigee end points use different naming pattern than viewing service.
+            var url = EnvironmentConfigurations[Global.env].ROOT;
+
+            xhr.open("POST", url + "/utility/v1/settoken", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.withCredentials = true;
+
+            xhr.send("access-token=" + token);
+
+            // Here we control whether to go through IE 11's authentication code path or not.
+            if (av.isIE11) {
+                avp.accessToken = token;
+            }
+        }
+        else {
+            var token =
+                {
+                    "oauth": {
+                        "token": token
+                    }
+                };
+
+            // console.log("auth token : " + JSON.stringify(token));
+
+            xhr.open("POST", VIEWING_URL + "/token", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.withCredentials = true;
+
+            xhr.send(JSON.stringify(token));
+        }
+
+    };
+
+    // Refresh the token in request header, in case that the third party cookie is disabled
+    var refreshRequestHeader = function (token) {
+
+        Global.HTTP_REQUEST_HEADERS["Authorization"] = "Bearer " + token;
+
+    };
+
+    var refreshToken = function (token, onSuccess, onError) {
+
+        // Store the token, it will be used when third-party cookies are disabled
+        Global.token.accessToken = token;
+
+        // At the beginning, try to store the token in cookie
+        if (Global.LMV_THIRD_PARTY_COOKIE === undefined) {
+            refreshCookie(token, onSuccess, onError);
+        } else {
+            doTokenRefresh();
+        }
+
+        // if third-party cookies are enabled in browser, then put token in cookie
+        // if not, put token into request header
+        function doTokenRefresh() {
+
+            if (Global.LMV_THIRD_PARTY_COOKIE) {
+
+                refreshCookie(token, onSuccess, onError);
+
+            } else {
+
+                refreshRequestHeader(token);
+                onSuccess();
+
+            }
+        }
+
+    };
+    var getAuthObject = function () {
+        return Global.auth;
+    };
+
     /*
     * @author mrdoob / http://mrdoob.com/
     */
 
-    var ddsLoader = function() {
-    
+    var ddsLoader = function () {
+
         THREE.DDSLoader = function () {
             this._parser = THREE.DDSLoader.parse;
         };
-    
+
         THREE.DDSLoader.prototype = Object.create(THREE.CompressedTextureLoader.prototype);
         THREE.DDSLoader.prototype.constructor = THREE.DDSLoader;
-    
+
         THREE.DDSLoader.parse = function (buffer, loadMipmaps) {
-    
+
             var dds = { mipmaps: [], width: 0, height: 0, format: null, mipmapCount: 1 };
-    
+
             // Adapted from @toji's DDS utils
             //	https://github.com/toji/webgl-texture-utils/blob/master/texture-util/dds.js
-    
+
             // All values and structures referenced from:
             // http://msdn.microsoft.com/en-us/library/bb943991.aspx/
-    
+
             var DDS_MAGIC = 0x20534444;
-    
+
             var DDSD_CAPS = 0x1,
                 DDSD_HEIGHT = 0x2,
                 DDSD_WIDTH = 0x4,
@@ -427,11 +707,11 @@ define([
                 DDSD_MIPMAPCOUNT = 0x20000,
                 DDSD_LINEARSIZE = 0x80000,
                 DDSD_DEPTH = 0x800000;
-    
+
             var DDSCAPS_COMPLEX = 0x8,
                 DDSCAPS_MIPMAP = 0x400000,
                 DDSCAPS_TEXTURE = 0x1000;
-    
+
             var DDSCAPS2_CUBEMAP = 0x200,
                 DDSCAPS2_CUBEMAP_POSITIVEX = 0x400,
                 DDSCAPS2_CUBEMAP_NEGATIVEX = 0x800,
@@ -440,25 +720,25 @@ define([
                 DDSCAPS2_CUBEMAP_POSITIVEZ = 0x4000,
                 DDSCAPS2_CUBEMAP_NEGATIVEZ = 0x8000,
                 DDSCAPS2_VOLUME = 0x200000;
-    
+
             var DDPF_ALPHAPIXELS = 0x1,
                 DDPF_ALPHA = 0x2,
                 DDPF_FOURCC = 0x4,
                 DDPF_RGB = 0x40,
                 DDPF_YUV = 0x200,
                 DDPF_LUMINANCE = 0x20000;
-    
+
             function fourCCToInt32(value) {
-    
+
                 return value.charCodeAt(0) +
                     (value.charCodeAt(1) << 8) +
                     (value.charCodeAt(2) << 16) +
                     (value.charCodeAt(3) << 24);
-    
+
             }
-    
+
             function int32ToFourCC(value) {
-    
+
                 return String.fromCharCode(
                     value & 0xff,
                     (value >> 8) & 0xff,
@@ -466,7 +746,7 @@ define([
                     (value >> 24) & 0xff
                 );
             }
-    
+
             function loadARGBMip(buffer, dataOffset, width, height) {
                 var dataLength = width * height * 4;
                 var srcBuffer = new Uint8Array(buffer, dataOffset, dataLength);
@@ -487,24 +767,24 @@ define([
                 }
                 return byteArray;
             }
-    
+
             var FOURCC_DXT1 = fourCCToInt32("DXT1");
             var FOURCC_DXT3 = fourCCToInt32("DXT3");
             var FOURCC_DXT5 = fourCCToInt32("DXT5");
-    
+
             var headerLengthInt = 31; // The header length in 32 bit ints
-    
+
             // Offsets into the header array
-    
+
             var off_magic = 0;
-    
+
             var off_size = 1;
             var off_flags = 2;
             var off_height = 3;
             var off_width = 4;
-    
+
             var off_mipmapCount = 7;
-    
+
             var off_pfFlags = 20;
             var off_pfFourCC = 21;
             var off_RGBBitCount = 22;
@@ -512,58 +792,58 @@ define([
             var off_GBitMask = 24;
             var off_BBitMask = 25;
             var off_ABitMask = 26;
-    
+
             var off_caps = 27;
             var off_caps2 = 28;
             var off_caps3 = 29;
             var off_caps4 = 30;
-    
+
             // Parse header
-    
+
             var header = new Int32Array(buffer, 0, headerLengthInt);
-    
+
             if (header[off_magic] !== DDS_MAGIC) {
-    
+
                 console.error('THREE.DDSLoader.parse: Invalid magic number in DDS header.');
                 return dds;
-    
+
             }
-    
+
             if (!header[off_pfFlags] & DDPF_FOURCC) {
-    
+
                 console.error('THREE.DDSLoader.parse: Unsupported format, must contain a FourCC code.');
                 return dds;
-    
+
             }
-    
+
             var blockBytes;
-    
+
             var fourCC = header[off_pfFourCC];
-    
+
             var isRGBAUncompressed = false;
-    
+
             switch (fourCC) {
-    
+
                 case FOURCC_DXT1:
-    
+
                     blockBytes = 8;
                     dds.format = THREE.RGB_S3TC_DXT1_Format;
                     break;
-    
+
                 case FOURCC_DXT3:
-    
+
                     blockBytes = 16;
                     dds.format = THREE.RGBA_S3TC_DXT3_Format;
                     break;
-    
+
                 case FOURCC_DXT5:
-    
+
                     blockBytes = 16;
                     dds.format = THREE.RGBA_S3TC_DXT5_Format;
                     break;
-    
+
                 default:
-    
+
                     if (header[off_RGBBitCount] == 32
                         && header[off_RBitMask] & 0xff0000
                         && header[off_GBitMask] & 0xff00
@@ -577,35 +857,35 @@ define([
                         return dds;
                     }
             }
-    
+
             dds.mipmapCount = 1;
-    
+
             if (header[off_mipmapCount] > 0 && loadMipmaps !== false) {
-    
+
                 dds.mipmapCount = Math.max(1, header[off_mipmapCount]);
-    
+
             }
-    
+
             //TODO: Verify that all faces of the cubemap are present with DDSCAPS2_CUBEMAP_POSITIVEX, etc.
-    
+
             dds.isCubemap = header[off_caps2] & DDSCAPS2_CUBEMAP ? true : false;
-    
+
             dds.width = header[off_width];
             dds.height = header[off_height];
-    
+
             var dataOffset = header[off_size] + 4;
-    
+
             // Extract mipmaps buffers
-    
+
             var width = dds.width;
             var height = dds.height;
-    
+
             var faces = dds.isCubemap ? 6 : 1;
-    
+
             for (var face = 0; face < faces; face++) {
-    
+
                 for (var i = 0; i < dds.mipmapCount; i++) {
-    
+
                     if (isRGBAUncompressed) {
                         var byteArray = loadARGBMip(buffer, dataOffset, width, height);
                         var dataLength = byteArray.length;
@@ -613,26 +893,26 @@ define([
                         var dataLength = Math.max(4, width) / 4 * Math.max(4, height) / 4 * blockBytes;
                         var byteArray = new Uint8Array(buffer, dataOffset, dataLength);
                     }
-    
+
                     var mipmap = { "data": byteArray, "width": width, "height": height };
                     dds.mipmaps.push(mipmap);
-    
+
                     dataOffset += dataLength;
-    
+
                     width = Math.max(width * 0.5, 1);
                     height = Math.max(height * 0.5, 1);
-    
+
                 }
-    
+
                 width = dds.width;
                 height = dds.height;
-    
+
             }
-    
+
             return dds;
-    
+
         };
-    
+
     };
 
     /*
@@ -644,56 +924,56 @@ define([
     *   TODO : Add Support for PVR v3 format
     *   TODO : implement loadMipmaps option
     */
-    var pvrLoader = function() {
-        
+    var pvrLoader = function () {
+
         THREE.PVRLoader = function (manager) {
-    
+
             this.manager = (manager !== undefined) ? manager : THREE.DefaultLoadingManager;
-    
+
             this._parser = THREE.PVRLoader.parse;
-    
+
         };
-    
+
         THREE.PVRLoader.prototype = Object.create(THREE.CompressedTextureLoader.prototype);
         THREE.PVRLoader.prototype.constructor = THREE.PVRLoader;
-    
-    
+
+
         THREE.PVRLoader.parse = function (buffer, loadMipmaps) {
-    
+
             var headerLengthInt = 13;
             var header = new Uint32Array(buffer, 0, headerLengthInt);
-    
+
             var pvrDatas = {
                 buffer: buffer,
                 header: header,
                 loadMipmaps: loadMipmaps
             };
-    
+
             // PVR v3
             if (header[0] === 0x03525650) {
-    
+
                 return THREE.PVRLoader._parseV3(pvrDatas);
-    
+
             }
-                // PVR v2
+            // PVR v2
             else if (header[11] === 0x21525650) {
-    
+
                 return THREE.PVRLoader._parseV2(pvrDatas);
-    
+
             } else {
-    
+
                 throw new Error("[THREE.PVRLoader] Unknown PVR format");
-    
+
             }
-    
+
         };
-    
+
         THREE.PVRLoader._parseV3 = function (pvrDatas) {
-    
+
             var header = pvrDatas.header;
             var bpp, format;
-    
-    
+
+
             var metaLen = header[12],
                 pixelFormat = header[2],
                 height = header[6],
@@ -701,7 +981,7 @@ define([
                 numSurfs = header[9],
                 numFaces = header[10],
                 numMipmaps = header[11];
-    
+
             switch (pixelFormat) {
                 case 0: // PVRTC 2bpp RGB
                     bpp = 2;
@@ -722,7 +1002,7 @@ define([
                 default:
                     throw new Error("pvrtc - unsupported PVR format " + pixelFormat);
             }
-    
+
             pvrDatas.dataPtr = 52 + metaLen;
             pvrDatas.bpp = bpp;
             pvrDatas.format = format;
@@ -730,17 +1010,17 @@ define([
             pvrDatas.height = height;
             pvrDatas.numSurfaces = numFaces;
             pvrDatas.numMipmaps = numMipmaps;
-    
+
             pvrDatas.isCubemap = (numFaces === 6);
-    
+
             return THREE.PVRLoader._extract(pvrDatas);
-    
+
         };
-    
+
         THREE.PVRLoader._parseV2 = function (pvrDatas) {
-    
+
             var header = pvrDatas.header;
-    
+
             var headerLength = header[0],
                 height = header[1],
                 width = header[2],
@@ -754,34 +1034,34 @@ define([
                 bitmaskAlpha = header[10],
                 pvrTag = header[11],
                 numSurfs = header[12];
-    
-    
+
+
             var TYPE_MASK = 0xff;
             var PVRTC_2 = 24,
                 PVRTC_4 = 25;
-    
+
             var formatFlags = flags & TYPE_MASK;
-    
-    
-    
+
+
+
             var bpp, format;
             var _hasAlpha = bitmaskAlpha > 0;
-    
+
             if (formatFlags === PVRTC_4) {
-    
+
                 format = _hasAlpha ? THREE.RGBA_PVRTC_4BPPV1_Format : THREE.RGB_PVRTC_4BPPV1_Format;
                 bpp = 4;
-    
+
             } else if (formatFlags === PVRTC_2) {
-    
+
                 format = _hasAlpha ? THREE.RGBA_PVRTC_2BPPV1_Format : THREE.RGB_PVRTC_2BPPV1_Format;
                 bpp = 2;
-    
+
             } else
                 throw new Error("pvrtc - unknown format " + formatFlags);
-    
-    
-    
+
+
+
             pvrDatas.dataPtr = headerLength;
             pvrDatas.bpp = bpp;
             pvrDatas.format = format;
@@ -789,18 +1069,18 @@ define([
             pvrDatas.height = height;
             pvrDatas.numSurfaces = numSurfs;
             pvrDatas.numMipmaps = numMipmaps + 1;
-    
+
             // guess cubemap type seems tricky in v2
             // it juste a pvr containing 6 surface (no explicit cubemap type)
             pvrDatas.isCubemap = (numSurfs === 6);
-    
+
             return THREE.PVRLoader._extract(pvrDatas);
-    
+
         };
-    
-    
+
+
         THREE.PVRLoader._extract = function (pvrDatas) {
-    
+
             var pvr = {
                 mipmaps: [],
                 width: pvrDatas.width,
@@ -809,13 +1089,13 @@ define([
                 mipmapCount: pvrDatas.numMipmaps,
                 isCubemap: pvrDatas.isCubemap
             };
-    
+
             var buffer = pvrDatas.buffer;
-    
-    
-    
+
+
+
             // console.log( "--------------------------" );
-    
+
             // console.log( "headerLength ", headerLength);
             // console.log( "height       ", height      );
             // console.log( "width        ", width       );
@@ -829,10 +1109,10 @@ define([
             // console.log( "bitmaskAlpha ", bitmaskAlpha);
             // console.log( "pvrTag       ", pvrTag      );
             // console.log( "numSurfs     ", numSurfs    );
-    
-    
-    
-    
+
+
+
+
             var dataOffset = pvrDatas.dataPtr,
                 bpp = pvrDatas.bpp,
                 numSurfs = pvrDatas.numSurfaces,
@@ -842,69 +1122,90 @@ define([
                 blockHeight = 0,
                 widthBlocks = 0,
                 heightBlocks = 0;
-    
-    
-    
+
+
+
             if (bpp === 2) {
-    
+
                 blockWidth = 8;
                 blockHeight = 4;
-    
+
             } else {
-    
+
                 blockWidth = 4;
                 blockHeight = 4;
-    
+
             }
-    
+
             blockSize = (blockWidth * blockHeight) * bpp / 8;
-    
+
             pvr.mipmaps.length = pvrDatas.numMipmaps * numSurfs;
-    
+
             var mipLevel = 0;
-    
+
             while (mipLevel < pvrDatas.numMipmaps) {
-    
+
                 var sWidth = pvrDatas.width >> mipLevel,
-                sHeight = pvrDatas.height >> mipLevel;
-    
+                    sHeight = pvrDatas.height >> mipLevel;
+
                 widthBlocks = sWidth / blockWidth;
                 heightBlocks = sHeight / blockHeight;
-    
+
                 // Clamp to minimum number of blocks
                 if (widthBlocks < 2)
                     widthBlocks = 2;
                 if (heightBlocks < 2)
                     heightBlocks = 2;
-    
+
                 dataSize = widthBlocks * heightBlocks * blockSize;
-    
-    
+
+
                 for (var surfIndex = 0; surfIndex < numSurfs; surfIndex++) {
-    
+
                     var byteArray = new Uint8Array(buffer, dataOffset, dataSize);
-    
+
                     var mipmap = {
                         data: byteArray,
                         width: sWidth,
                         height: sHeight
                     };
-    
+
                     pvr.mipmaps[surfIndex * pvrDatas.numMipmaps + mipLevel] = mipmap;
-    
+
                     dataOffset += dataSize;
-    
-    
+
+
                 }
-    
+
                 mipLevel++;
-    
+
             }
-    
-    
+
+
             return pvr;
-    
+
         };
-    
+
     }
+
+
+    return {
+        Initializer: Initializer,
+        initializeAuth: initializeAuth,
+        initializeLocalization: initializeLocalization,
+        initializeLogger: initializeLogger,
+        initializeProtein: initializeProtein,
+        initializeUserInfo: initializeUserInfo,
+        initializeServiceEndPoints: initializeServiceEndPoints,
+        initLoadContext: initLoadContext,
+        initializeEnvironmentVariable: initializeEnvironmentVariable,
+
+        EnvironmentConfigurations: EnvironmentConfigurations,
+        refreshToken: refreshToken,
+        refreshCookie: refreshCookie,
+        refreshRequestHeader: refreshRequestHeader
+        
+    }
+
+
 });

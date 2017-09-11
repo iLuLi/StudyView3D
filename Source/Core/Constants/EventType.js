@@ -44,5 +44,7 @@ define(function() {;
 
         TOOLBAR_CREATED_EVENT: 'toolbarCreated',
         SIDE_BAR_OPEN_EVENT: 'SIDE_BAR_OPEN_EVENT',
+
+        ANNOTATION_CREATED_EVENT: "annotationCreated"
     }
 });

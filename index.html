@@ -7,7 +7,6 @@
     <link rel="stylesheet" type="text/css" href="./style/style.min.css">
     <script src="./lib/three.js/three.min.js"></script>
     <script src="./build/HY.min.js"></script>
-    <script src="./t.js"></script>
 </head>
 <body style="margin:0px">
     <div id="viewer-local"></div>
@@ -24,7 +23,7 @@
 
     var path = "./model/3d.svf";
     var element = document.getElementById('viewer-local');
-    var viewer = new HY.Widget.GuiViewer3D(element, config);
+    var viewer = new HY.UI.GuiViewer3D(element, config);
     //var viewer = new Autodesk.Viewing.Viewer3D(element, config);
 
     var options = {
@@ -34,7 +33,7 @@
         useADP: false
     };
 
-    HY.Core.Privite.Fn.Initializer (options, function () {
+    HY.Core.Inits.Initializer (options, function () {
         //viewer.initialize();
         viewer.start();
         viewer.load(options.docid, undefined, onLoadSuccess, onLoadError);

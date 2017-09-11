@@ -12,8 +12,8 @@ var babel = require('gulp-babel');
 
 
 
-var SourcePaths = ['src/**/'];
-var SourceFiles = ['src/**/*.js', '!src/HY.js', '!src/main.js'];
+var SourcePaths = ['Source/**/'];
+var SourceFiles = ['Source/**/*.js', '!Source/HY.js', '!Source/main.js'];
 
 gulp.task('default', ['build']);
 
@@ -26,11 +26,11 @@ gulp.task('combine', function() {
 
 gulp.task('pack', function() {
     //打包
-    requirePack('./src', 'none', './build/HY.js');
+    requirePack('./Source', 'none', './build/HY.js');
 });
 
 gulp.task('babel', function() {
-    var stream = gulp.src(['src/**'])
+    var stream = gulp.src(['Source/**'])
         .pipe(babel())
         .pipe(gulp.dest('babel'));
     return stream;
@@ -46,7 +46,7 @@ function createHYFile() {
     var namespaces = [];
     var namespaceInit = [];
     globby.sync(SourcePaths).forEach(function(_path) {
-        _path = path.relative('src', _path);
+        _path = path.relative('Source', _path);
         console.log(_path)
         var dirs = _path.split('\\');
         var namespace = root;
@@ -69,7 +69,7 @@ function createHYFile() {
     var moduleNames = [];
     var modules = [];
     globby.sync(SourceFiles).forEach(function(file) {
-        file = path.relative('src', file);
+        file = path.relative('Source', file);
         var isInitFile = file.indexOf('\\Init.js') > -1;
         var module = pathToModule(file);
         var moduleName = module.replace(/[^a-zA-Z1-9]/g, '_');
@@ -101,7 +101,7 @@ function createHYFile() {
         + '\nreturn HY;\n'
         + '});'
 
-    fs.writeFileSync(path.join('src', 'HY.js'), content);
+    fs.writeFileSync(path.join('Source', 'HY.js'), content);
 }
 
 function pathToModule(file) {
@@ -126,7 +126,7 @@ function requirePack(baseUrl, optimizer, outputFile, isMinify) {
         optimize : optimizer,
         optimizeCss : 'standard',
         skipModuleInsertion : true,
-        name : removeExtension(path.relative('src', require.resolve('almond'))),
+        name : removeExtension(path.relative('Source', require.resolve('almond'))),
         include : './main.js',
         out : outputFile
     }, function() {
